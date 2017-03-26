@@ -9,13 +9,13 @@
 import Foundation
 import UIKit
 
-protocol SlideButtonDelegate{
+protocol SlideButtonDelegate: class {
     func buttonStatus(_ status:String, sender:MMSlidingButton)
 }
 
 @IBDesignable class MMSlidingButton: UIView{
     
-    var delegate: SlideButtonDelegate?
+    weak var delegate: SlideButtonDelegate?
     
     @IBInspectable var dragPointWidth: CGFloat = 70 {
         didSet{
@@ -71,6 +71,24 @@ protocol SlideButtonDelegate{
         }
     }
     
+    var dragPointCornerRadius: CGFloat = 30 {
+        didSet {
+            layoutSubviews()
+        }
+    }
+    
+    var roundedCorners: UIRectCorner? = .allCorners {
+        didSet{
+            layoutSubviews()
+        }
+    }
+    
+    var roundedDragPointCorners: UIRectCorner? = [.topRight, .bottomRight] {
+        didSet{
+            layoutSubviews()
+        }
+    }
+    
     @IBInspectable var buttonUnlockedText: String   = "UNLOCKED"
     @IBInspectable var buttonUnlockedColor: UIColor = UIColor.black
     var buttonFont                                  = UIFont.boldSystemFont(ofSize: 17)
@@ -93,68 +111,84 @@ protocol SlideButtonDelegate{
     }
     
     override func layoutSubviews() {
-        if !layoutSet{
+        super.layoutSubviews()
+        
+        if !layoutSet {
             self.setUpButton()
             self.layoutSet = true
         }
     }
     
     func setStyle(){
-        self.buttonLabel.text               = self.buttonText
-        self.dragPointButtonLabel.text      = self.buttonText
-        self.dragPoint.frame.size.width     = self.dragPointWidth
-        self.dragPoint.backgroundColor      = self.dragPointColor
-        self.backgroundColor                = self.buttonColor
-        self.imageView.image                = imageName
-        self.buttonLabel.textColor          = self.buttonTextColor
-        self.dragPointButtonLabel.textColor = self.dragPointTextColor
+        buttonLabel.text               = buttonText
+        buttonLabel.textColor          = buttonTextColor
         
-        self.dragPoint.layer.cornerRadius   = buttonCornerRadius
-        self.layer.cornerRadius             = buttonCornerRadius
+        dragPointButtonLabel.text      = buttonText
+        dragPoint.frame.size.width     = dragPointWidth
+        dragPoint.backgroundColor      = dragPointColor
+        dragPointButtonLabel.textColor = dragPointTextColor
+        dragPoint.layer.cornerRadius   = buttonCornerRadius
+        
+        backgroundColor                = buttonColor
+        imageView.image                = imageName
+        
+        if let corners = roundedCorners {
+            layer.round(with: buttonCornerRadius, corners: corners)
+        }
+        clipsToBounds = true
     }
     
     func setUpButton(){
         
-        self.backgroundColor              = self.buttonColor
+        backgroundColor              = buttonColor
+        dragPoint                    = UIView(frame: CGRect(x: dragPointWidth - self.frame.size.width,
+                                                            y: 0,
+                                                            width: self.frame.size.width,
+                                                            height: self.frame.size.height))
+        dragPoint.backgroundColor    = dragPointColor
+        addSubview(self.dragPoint)
         
-        self.dragPoint                    = UIView(frame: CGRect(x: dragPointWidth - self.frame.size.width, y: 0, width: self.frame.size.width, height: self.frame.size.height))
-        self.dragPoint.backgroundColor    = dragPointColor
-        self.dragPoint.layer.cornerRadius = buttonCornerRadius
-        self.addSubview(self.dragPoint)
-        
-        if !self.buttonText.isEmpty{
+        if !buttonText.isEmpty{
+            buttonLabel               = UILabel(frame: CGRect(x: 0,
+                                                              y: 0,
+                                                              width: self.frame.size.width,
+                                                              height: self.frame.size.height))
+            buttonLabel.textAlignment = .center
+            buttonLabel.text          = buttonText
+            buttonLabel.textColor     = UIColor.white
+            buttonLabel.font          = buttonFont
+            buttonLabel.textColor     = buttonTextColor
+            addSubview(buttonLabel)
             
-            self.buttonLabel               = UILabel(frame: CGRect(x: 0, y: 0, width: self.frame.size.width, height: self.frame.size.height))
-            self.buttonLabel.textAlignment = .center
-            self.buttonLabel.text          = buttonText
-            self.buttonLabel.textColor     = UIColor.white
-            self.buttonLabel.font          = self.buttonFont
-            self.buttonLabel.textColor     = self.buttonTextColor
-            self.addSubview(self.buttonLabel)
-            
-            self.dragPointButtonLabel               = UILabel(frame: CGRect(x: 0, y: 0, width: self.frame.size.width, height: self.frame.size.height))
-            self.dragPointButtonLabel.textAlignment = .center
-            self.dragPointButtonLabel.text          = buttonText
-            self.dragPointButtonLabel.textColor     = UIColor.white
-            self.dragPointButtonLabel.font          = self.buttonFont
-            self.dragPointButtonLabel.textColor     = self.dragPointTextColor
-            self.dragPoint.addSubview(self.dragPointButtonLabel)
+            dragPointButtonLabel               = UILabel(frame: CGRect(x: 0, y: 0, width: self.frame.size.width, height: self.frame.size.height))
+            dragPointButtonLabel.textAlignment = .center
+            dragPointButtonLabel.text          = buttonText
+            dragPointButtonLabel.textColor     = .white
+            dragPointButtonLabel.font          = buttonFont
+            dragPointButtonLabel.textColor     = dragPointTextColor
+            if let dragPointCorners = roundedDragPointCorners {
+                dragPoint.layer.round(with: dragPointCornerRadius, corners: dragPointCorners)
+            }
+            dragPoint.addSubview(self.dragPointButtonLabel)
         }
         self.bringSubview(toFront: self.dragPoint)
         
-        if self.imageName != UIImage(){
-            self.imageView = UIImageView(frame: CGRect(x: self.frame.size.width - dragPointWidth, y: 0, width: self.dragPointWidth, height: self.frame.size.height))
-            self.imageView.contentMode = .center
-            self.imageView.image = self.imageName
-            self.dragPoint.addSubview(self.imageView)
+        if self.imageName != UIImage() {
+            imageView = UIImageView(frame: CGRect(x: self.frame.size.width - dragPointWidth,
+                                                  y: 0,
+                                                  width: self.dragPointWidth,
+                                                  height: self.frame.size.height))
+            imageView.contentMode = .center
+            imageView.image = imageName
+            dragPoint.addSubview(imageView)
         }
         
         self.layer.masksToBounds = true
         
         // start detecting pan gesture
-        let panGestureRecognizer                    = UIPanGestureRecognizer(target: self, action: #selector(panDetected(_ :)))
+        let panGestureRecognizer = UIPanGestureRecognizer(target: self, action: #selector(panDetected(_ :)))
         panGestureRecognizer.minimumNumberOfTouches = 1
-        self.dragPoint.addGestureRecognizer(panGestureRecognizer)
+        dragPoint.addGestureRecognizer(panGestureRecognizer)
     }
     
     func panDetected(_ sender: UIPanGestureRecognizer){
@@ -174,8 +208,8 @@ protocol SlideButtonDelegate{
             
             let animationDuration:Double = abs(Double(velocityX) * 0.0002) + 0.2
             UIView.transition(with: self, duration: animationDuration, options: UIViewAnimationOptions.curveEaseOut, animations: {
-                }, completion: { (Status) in
-                    if Status{
+                }, completion: { (status) in
+                    if status {
                         self.animationFinished()
                     }
             })
@@ -192,8 +226,8 @@ protocol SlideButtonDelegate{
     func unlock(){
         UIView.transition(with: self, duration: 0.2, options: .curveEaseOut, animations: {
             self.dragPoint.frame = CGRect(x: self.frame.size.width - self.dragPoint.frame.size.width, y: 0, width: self.dragPoint.frame.size.width, height: self.dragPoint.frame.size.height)
-        }) { (Status) in
-            if Status{
+        }) { (status) in
+            if status{
                 self.dragPointButtonLabel.text      = self.buttonUnlockedText
                 self.imageView.isHidden               = true
                 self.dragPoint.backgroundColor      = self.buttonUnlockedColor
@@ -207,8 +241,8 @@ protocol SlideButtonDelegate{
     func reset(){
         UIView.transition(with: self, duration: 0.2, options: .curveEaseOut, animations: {
             self.dragPoint.frame = CGRect(x: self.dragPointWidth - self.frame.size.width, y: 0, width: self.dragPoint.frame.size.width, height: self.dragPoint.frame.size.height)
-        }) { (Status) in
-            if Status{
+        }) { (status) in
+            if status{
                 self.dragPointButtonLabel.text      = self.buttonText
                 self.imageView.isHidden               = false
                 self.dragPoint.backgroundColor      = self.dragPointColor
@@ -217,5 +251,17 @@ protocol SlideButtonDelegate{
                 //self.delegate?.buttonStatus("Locked")
             }
         }
+    }
+}
+
+extension CALayer {
+    
+    func round(with radius: CGFloat, corners: UIRectCorner) {
+        let maskPath = UIBezierPath(roundedRect: bounds,
+                                    byRoundingCorners: corners,
+                                    cornerRadii: CGSize(width: radius, height: radius))
+        let shape = CAShapeLayer()
+        shape.path = maskPath.cgPath
+        mask = shape
     }
 }
