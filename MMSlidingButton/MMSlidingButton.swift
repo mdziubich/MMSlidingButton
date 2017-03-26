@@ -10,7 +10,7 @@ import Foundation
 import UIKit
 
 protocol SlideButtonDelegate{
-    func buttonStatus(status:String, sender:MMSlidingButton)
+    func buttonStatus(_ status:String, sender:MMSlidingButton)
 }
 
 @IBDesignable class MMSlidingButton: UIView{
@@ -152,12 +152,12 @@ protocol SlideButtonDelegate{
         self.layer.masksToBounds = true
         
         // start detecting pan gesture
-        let panGestureRecognizer                    = UIPanGestureRecognizer(target: self, action: #selector(self.panDetected(sender:)))
+        let panGestureRecognizer                    = UIPanGestureRecognizer(target: self, action: #selector(panDetected(_ :)))
         panGestureRecognizer.minimumNumberOfTouches = 1
         self.dragPoint.addGestureRecognizer(panGestureRecognizer)
     }
     
-    func panDetected(sender: UIPanGestureRecognizer){
+    func panDetected(_ sender: UIPanGestureRecognizer){
         var translatedPoint = sender.translation(in: self)
         translatedPoint     = CGPoint(x: translatedPoint.x, y: self.frame.size.height / 2)
         sender.view?.frame.origin.x = (dragPointWidth - self.frame.size.width) + translatedPoint.x
@@ -198,7 +198,7 @@ protocol SlideButtonDelegate{
                 self.imageView.isHidden               = true
                 self.dragPoint.backgroundColor      = self.buttonUnlockedColor
                 self.dragPointButtonLabel.textColor = self.buttonUnlockedTextColor
-                self.delegate?.buttonStatus(status: "Unlocked", sender: self)
+                self.delegate?.buttonStatus("Unlocked", sender: self)
             }
         }
     }

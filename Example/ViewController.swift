@@ -18,14 +18,14 @@ class ViewController: UIViewController, SlideButtonDelegate {
         self.button.delegate = self
     }
     
-    @IBAction func resetClicked(sender: AnyObject) {
+    @IBAction func resetClicked(_ sender: AnyObject) {
         self.button.reset()
     }
     
     
     //Slide Button Delegate
-    func buttonStatus(Status: String) {
-        print(Status)
+    func buttonStatus(_ status: String, sender: MMSlidingButton) {
+        print(status)
     }
     
     override func didReceiveMemoryWarning() {
