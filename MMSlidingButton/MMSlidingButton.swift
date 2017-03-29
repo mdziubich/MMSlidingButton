@@ -48,6 +48,12 @@ protocol SlideButtonDelegate: class {
         }
     }
     
+    @IBInspectable var dragPointUnlockedColor: UIColor = .red {
+        didSet{
+            dragPointBackgroundView.backgroundColor = dragPointUnlockedColor
+        }
+    }
+    
     @IBInspectable var imageName: UIImage = UIImage() {
         didSet {
             imageView.image = imageName
@@ -104,6 +110,9 @@ protocol SlideButtonDelegate: class {
     var unlocked             = false
     var layoutSet            = false
     
+    var dragPointBackgroundAnimationable = false
+    var dragPointBackgroundView = UIView()
+    
     private let widthLeftMargin: CGFloat = 50
     
     override init (frame : CGRect) {
@@ -121,6 +130,9 @@ protocol SlideButtonDelegate: class {
             layoutSet = true
         }
         dragPoint.layer.round(with: dragPointCornerRadius, corners: roundedDragPointCorners)
+        if dragPointBackgroundAnimationable {
+            dragPointBackgroundView.layer.round(with: dragPointCornerRadius, corners: roundedDragPointCorners)
+        }
     }
     
     func setUpButton() {
@@ -130,7 +142,11 @@ protocol SlideButtonDelegate: class {
         setupButtonLabel()
         setupDragButtonImage()
         setupPanGesture()
-        bringSubview(toFront: self.dragPoint)
+        if dragPointBackgroundAnimationable {
+            bringSubview(toFront: dragPointBackgroundView)
+        } else {
+            bringSubview(toFront: dragPoint)
+        }
     }
     
     private func setupDragPointButton() {
@@ -154,7 +170,6 @@ protocol SlideButtonDelegate: class {
             buttonLabel.font          = buttonFont
             buttonLabel.textColor     = buttonTextColor
             addSubview(buttonLabel)
-            
             setupDragButton()
         }
     }
@@ -169,7 +184,23 @@ protocol SlideButtonDelegate: class {
         dragPointButtonLabel.textColor     = .white
         dragPointButtonLabel.font          = buttonFont
         dragPointButtonLabel.textColor     = dragPointTextColor
-        dragPoint.addSubview(self.dragPointButtonLabel)
+        
+        if dragPointBackgroundAnimationable {
+            setupDragPointAniamtionableView()
+        } else {
+            dragPoint.addSubview(dragPointButtonLabel)
+        }
+    }
+    
+    private func setupDragPointAniamtionableView() {
+        dragPointBackgroundView = UIView(frame: CGRect(x: dragPointWidth - frame.size.width - widthLeftMargin,
+                                                       y: 0,
+                                                       width: frame.size.width + widthLeftMargin,
+                                                       height: frame.size.height))
+        dragPointBackgroundView.backgroundColor = dragPointUnlockedColor
+        addSubview(dragPointBackgroundView)
+        dragPointBackgroundView.addSubview(dragPointButtonLabel)
+        dragPointBackgroundView.alpha = 0
     }
     
     private func setupDragButtonImage() {
@@ -194,6 +225,10 @@ protocol SlideButtonDelegate: class {
         var translatedPoint = sender.translation(in: self)
         translatedPoint     = CGPoint(x: translatedPoint.x, y: self.frame.size.height / 2)
         sender.view?.frame.origin.x = (dragPointWidth - self.frame.size.width - widthLeftMargin) + translatedPoint.x
+        if dragPointBackgroundAnimationable {
+            dragPointBackgroundView.frame.origin.x = (dragPointWidth - self.frame.size.width - widthLeftMargin) + translatedPoint.x
+            dragPointBackgroundView.alpha = translatedPoint.x / (dragPoint.frame.width - widthLeftMargin)
+        }
         if sender.state == .ended{
             
             let velocityX = sender.velocity(in: self).x * 0.2
@@ -224,10 +259,15 @@ protocol SlideButtonDelegate: class {
     //lock button animation (SUCCESS)
     func unlock(){
         UIView.transition(with: self, duration: 0.2, options: .curveEaseOut, animations: {
-            self.dragPoint.frame = CGRect(x: self.frame.size.width - self.dragPoint.frame.size.width,
-                                          y: 0,
-                                          width: self.dragPoint.frame.size.width,
-                                          height: self.dragPoint.frame.size.height)
+            let frame = CGRect(x: self.frame.size.width - self.dragPoint.frame.size.width,
+                               y: 0,
+                               width: self.dragPoint.frame.size.width,
+                               height: self.dragPoint.frame.size.height)
+            self.dragPoint.frame = frame
+            if self.dragPointBackgroundAnimationable {
+                self.dragPointBackgroundView.frame = frame
+                self.dragPointBackgroundView.alpha = 1
+            }
         }) { (status) in
             if status{
                 self.dragPointButtonLabel.text      = self.buttonUnlockedText
@@ -242,10 +282,15 @@ protocol SlideButtonDelegate: class {
     //reset button animation (RESET)
     func reset(){
         UIView.transition(with: self, duration: 0.2, options: .curveEaseOut, animations: {
-            self.dragPoint.frame = CGRect(x: self.dragPointWidth - self.frame.size.width - self.widthLeftMargin,
-                                          y: 0,
-                                          width: self.dragPoint.frame.size.width,
-                                          height: self.dragPoint.frame.size.height)
+            let frame = CGRect(x: self.dragPointWidth - self.frame.size.width - self.widthLeftMargin,
+                               y: 0,
+                               width: self.dragPoint.frame.size.width,
+                               height: self.dragPoint.frame.size.height)
+            
+            self.dragPoint.frame = frame
+            if self.dragPointBackgroundAnimationable {
+                self.dragPointBackgroundView.frame = frame
+            }
         }) { (status) in
             if status{
                 self.dragPointButtonLabel.text      = self.buttonText
@@ -253,7 +298,8 @@ protocol SlideButtonDelegate: class {
                 self.dragPoint.backgroundColor      = self.dragPointColor
                 self.dragPointButtonLabel.textColor = self.dragPointTextColor
                 self.unlocked                       = false
-                //self.delegate?.buttonStatus("Locked")
+                self.dragPointBackgroundView.alpha  = 0
+                self.delegate?.buttonStatus("Locked", sender: self)
             }
         }
     }

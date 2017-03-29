@@ -14,7 +14,7 @@ class ViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        button.delegate = self
+        setupSliderButton()
     }
     
     @IBAction func resetClicked(_ sender: AnyObject) {
@@ -22,11 +22,8 @@ class ViewController: UIViewController {
     }
     
     private func setupSliderButton() {
-        button.dragPointColor = .white
-        
-        
-        
-        
+        button.delegate = self
+        button.dragPointBackgroundAnimationable = true
     }
 }
 
