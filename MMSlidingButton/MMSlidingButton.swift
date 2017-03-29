@@ -222,31 +222,33 @@ protocol SlideButtonDelegate: class {
     }
     
     func panDetected(_ sender: UIPanGestureRecognizer){
-        var translatedPoint = sender.translation(in: self)
-        translatedPoint     = CGPoint(x: translatedPoint.x, y: self.frame.size.height / 2)
-        sender.view?.frame.origin.x = (dragPointWidth - self.frame.size.width - widthLeftMargin) + translatedPoint.x
-        if dragPointBackgroundAnimationable {
-            dragPointBackgroundView.frame.origin.x = (dragPointWidth - self.frame.size.width - widthLeftMargin) + translatedPoint.x
-            dragPointBackgroundView.alpha = translatedPoint.x / (dragPoint.frame.width - widthLeftMargin)
-        }
-        if sender.state == .ended{
-            
-            let velocityX = sender.velocity(in: self).x * 0.2
-            var finalX    = translatedPoint.x + velocityX
-            if finalX < 0{
-                finalX = 0
-            }else if finalX + self.dragPointWidth  >  (self.frame.size.width - 60){
-                unlocked = true
-                self.unlock()
+        if !unlocked {
+            var translatedPoint = sender.translation(in: self)
+            translatedPoint     = CGPoint(x: translatedPoint.x, y: self.frame.size.height / 2)
+            sender.view?.frame.origin.x = (dragPointWidth - self.frame.size.width - widthLeftMargin) + translatedPoint.x
+            if dragPointBackgroundAnimationable {
+                dragPointBackgroundView.frame.origin.x = (dragPointWidth - self.frame.size.width - widthLeftMargin) + translatedPoint.x
+                dragPointBackgroundView.alpha = translatedPoint.x / (dragPoint.frame.width - widthLeftMargin)
             }
-            
-            let animationDuration:Double = abs(Double(velocityX) * 0.0002) + 0.2
-            UIView.transition(with: self, duration: animationDuration, options: UIViewAnimationOptions.curveEaseOut, animations: {
+            if sender.state == .ended{
+                
+                let velocityX = sender.velocity(in: self).x * 0.2
+                var finalX    = translatedPoint.x + velocityX
+                if finalX < 0{
+                    finalX = 0
+                }else if finalX + self.dragPointWidth  >  (self.frame.size.width - 60){
+                    unlocked = true
+                    self.unlock()
+                }
+                
+                let animationDuration:Double = abs(Double(velocityX) * 0.0002) + 0.2
+                UIView.transition(with: self, duration: animationDuration, options: UIViewAnimationOptions.curveEaseOut, animations: {
                 }, completion: { (status) in
                     if status {
                         self.animationFinished()
                     }
-            })
+                })
+            }
         }
     }
     
