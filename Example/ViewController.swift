@@ -20,6 +20,14 @@ class ViewController: UIViewController {
     @IBAction func resetClicked(_ sender: AnyObject) {
         button.reset()
     }
+    
+    private func setupSliderButton() {
+        button.dragPointColor = .white
+        
+        
+        
+        
+    }
 }
 
 extension ViewController: SlideButtonDelegate {
