@@ -8,28 +8,24 @@
 
 import UIKit
 
-class ViewController: UIViewController, SlideButtonDelegate {
+class ViewController: UIViewController {
     
     @IBOutlet weak var button: MMSlidingButton!
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        self.button.delegate = self
+        button.delegate = self
     }
     
     @IBAction func resetClicked(_ sender: AnyObject) {
-        self.button.reset()
+        button.reset()
     }
-    
+}
+
+extension ViewController: SlideButtonDelegate {
     
     //Slide Button Delegate
     func buttonStatus(_ status: String, sender: MMSlidingButton) {
         print(status)
     }
-    
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-    }
 }
-

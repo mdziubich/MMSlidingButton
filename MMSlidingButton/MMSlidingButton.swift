@@ -19,55 +19,56 @@ protocol SlideButtonDelegate: class {
     
     @IBInspectable var dragPointWidth: CGFloat = 70 {
         didSet{
-            setStyle()
+            dragPoint.frame.size.width = dragPointWidth
         }
     }
     
     @IBInspectable var dragPointColor: UIColor = UIColor.darkGray {
         didSet{
-            setStyle()
+            dragPoint.backgroundColor = dragPointColor
         }
     }
     
     @IBInspectable var buttonColor: UIColor = UIColor.gray {
         didSet{
-            setStyle()
+            backgroundColor = buttonColor
         }
     }
     
     @IBInspectable var buttonText: String = "UNLOCK" {
         didSet{
-            setStyle()
+            dragPointButtonLabel.text = buttonText
+            buttonLabel.text = buttonText
         }
     }
     
     @IBInspectable var imageName: UIImage = UIImage() {
-        didSet{
-            setStyle()
+        didSet {
+            imageView.image = imageName
         }
     }
     
     @IBInspectable var buttonTextColor: UIColor = UIColor.white {
         didSet{
-            setStyle()
+            buttonLabel.textColor = buttonTextColor
         }
     }
     
     @IBInspectable var dragPointTextColor: UIColor = UIColor.white {
         didSet{
-            setStyle()
+            dragPointButtonLabel.textColor = dragPointTextColor
         }
     }
     
     @IBInspectable var buttonUnlockedTextColor: UIColor = UIColor.white {
         didSet{
-            setStyle()
+            dragPointButtonLabel.textColor = buttonUnlockedTextColor
         }
     }
     
     @IBInspectable var buttonCornerRadius: CGFloat = 30 {
         didSet{
-            setStyle()
+            dragPoint.layer.cornerRadius = buttonCornerRadius
         }
     }
     
@@ -77,9 +78,10 @@ protocol SlideButtonDelegate: class {
         }
     }
     
-    var roundedCorners: UIRectCorner? = .allCorners {
+    var roundedCorners: UIRectCorner = .allCorners {
         didSet{
-            layoutSubviews()
+            layer.round(with: buttonCornerRadius, corners: roundedCorners)
+            clipsToBounds = true
         }
     }
     
@@ -91,9 +93,8 @@ protocol SlideButtonDelegate: class {
     
     @IBInspectable var buttonUnlockedText: String   = "UNLOCKED"
     @IBInspectable var buttonUnlockedColor: UIColor = UIColor.black
-    var buttonFont                                  = UIFont.boldSystemFont(ofSize: 17)
     
-    
+    var buttonFont           = UIFont.boldSystemFont(ofSize: 17)
     var dragPoint            = UIView()
     var buttonLabel          = UILabel()
     var dragPointButtonLabel = UILabel()
@@ -107,35 +108,14 @@ protocol SlideButtonDelegate: class {
     
     required init(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)!
-        
     }
     
     override func layoutSubviews() {
         super.layoutSubviews()
-        
         if !layoutSet {
             self.setUpButton()
             self.layoutSet = true
         }
-    }
-    
-    func setStyle(){
-        buttonLabel.text               = buttonText
-        buttonLabel.textColor          = buttonTextColor
-        
-        dragPointButtonLabel.text      = buttonText
-        dragPoint.frame.size.width     = dragPointWidth
-        dragPoint.backgroundColor      = dragPointColor
-        dragPointButtonLabel.textColor = dragPointTextColor
-        dragPoint.layer.cornerRadius   = buttonCornerRadius
-        
-        backgroundColor                = buttonColor
-        imageView.image                = imageName
-        
-        if let corners = roundedCorners {
-            layer.round(with: buttonCornerRadius, corners: corners)
-        }
-        clipsToBounds = true
     }
     
     func setUpButton(){
